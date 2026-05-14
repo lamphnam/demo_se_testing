@@ -69,6 +69,9 @@ python -m unittest discover -s level2/F002_assignment_submission -p "test_*.py" 
 # F002 Assignment Submission (Single module)
 python -m unittest level1.F002_assignment_submission.test_add_submission_level1 -v
 
+# F002 Assignment Submission (Non-functional)
+python -m unittest discover -s non_functional/F002_assignment_submission -p "test_*.py" -v
+
 # F003 Forum Discussion (Level 1)
 python -m unittest discover -s level1/F003_forum_discussion -p "test_*.py" -v
 

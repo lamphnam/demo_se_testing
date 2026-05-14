@@ -93,6 +93,9 @@ python -m unittest discover -s level1/F001_quiz_attempt_review -p "test_*.py" -v
 # F001 Quiz Attempt and Result Review (Level 2)
 python -m unittest discover -s level2/F001_quiz_attempt_review -p "test_*.py" -v
 
+# F002 Assignment Submission (Non-functional)
+python -m unittest discover -s non_functional/F002_assignment_submission -p "test_*.py" -v
+
 # F003 Forum Discussion (Level 1)
 python -m unittest discover -s level1/F003_forum_discussion -p "test_*.py" -v
 

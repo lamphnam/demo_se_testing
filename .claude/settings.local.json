@@ -7,7 +7,10 @@
       "Bash(mkdir -p level2/F002_assignment_submission/data/files)",
       "Bash(cp test_doc.doc level1/F002_assignment_submission/data/files/)",
       "Bash(cp 1mb.pdf level1/F002_assignment_submission/data/files/)",
-      "Bash(cp test_doc.doc level2/F002_assignment_submission/data/files/)"
+      "Bash(cp test_doc.doc level2/F002_assignment_submission/data/files/)",
+      "Bash(find . -type d -name \"__pycache__\")",
+      "Bash(find . -name \"*.pyc\")",
+      "Bash([ ! -f \"$d/__init__.py\" ])"
     ]
   }
 }

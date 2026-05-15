@@ -39,7 +39,7 @@ class GlossaryResponsiveTest(unittest.TestCase):
         LoginHelper.ensure_logged_in(self.driver, return_url=return_url, username="student", password="moodle26")
 
     def read_test_data(self):
-        return CSVReader.read_data(DATA_FILE, delimiter=",")
+        return CSVReader.read_data(DATA_FILE, delimiter="\t")
 
     def verify_add_entry_btn(self):
         short_wait = WebDriverWait(self.driver, 5)
@@ -61,15 +61,14 @@ class GlossaryResponsiveTest(unittest.TestCase):
             width = int(row["width"])
             height = int(row["height"])
             expected_elements = row["expected_elements"].split(",")
-
-            url = "https://school.moodledemo.net/mod/glossary/view.php?id=570&mode=letter&hook=ALL"
+            url = row["glossary_url"]
 
             print(f"\nRunning {test_case_id} - viewport: {viewport_name} {width}x{height}")
 
             with self.subTest(test_case_id=test_case_id):
                 driver = self.driver
                 driver.set_window_size(width, height)
-                
+
                 driver.get(url)
                 self.ensure_logged_in(return_url=url)
                 self.wait.until(EC.presence_of_element_located((By.ID, "page")))

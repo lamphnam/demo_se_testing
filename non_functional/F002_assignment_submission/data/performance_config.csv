@@ -1,0 +1,2 @@
+test_case_id	scenario	assignment_url	threshold_seconds	expected_result
+NF-F002-PERF-001	Submission save response time	https://school.moodledemo.net/mod/assign/view.php?id=871	10.0	Submission completes within threshold

@@ -117,8 +117,7 @@ class GlossaryLevel1(unittest.TestCase):
     def verify_add(self, row):
         expected_type = row["expected_type"]
         expected_text = row["expected_text"]
-        self.driver.save_screenshot(f"debug_{row['test_case_id']}.png")
-        
+
         if expected_type in ("success", "success_search"):
             content_to_check = row["concept"].strip() or row["definition"].strip()
             try:

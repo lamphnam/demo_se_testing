@@ -29,9 +29,19 @@ proj_3/
 │   │   ├── data/                    # Test data CSV (comma-separated)
 │   │   └── test_level_1.py          # 1 test module, 10 test cases
 │   │
+│   ├── F002_assignment_submission/  # Assignment submission tests
+│   │   ├── data/                    # Test data CSVs (comma-separated) + files/
+│   │   ├── test_add_submission_level1.py    # TC-002-001 to TC-002-009
+│   │   ├── test_remove_submission_level1.py # TC-002-010
+│   │   └── test_cutoff_submission_level1.py # TC-002-011
+│   │
 │   ├── F003_forum_discussion/       # Forum discussion CRUD tests
 │   │   ├── data/                    # Test data CSVs + sample assets
 │   │   └── test_*.py                # 7 test modules, 14 test cases
+│   │
+│   ├── F004_glossary/               # Glossary add/search/browse tests
+│   │   ├── data/                    # Test data CSV (comma-separated)
+│   │   └── test_glossary_level1.py  # TC-004-001 to TC-004-015
 │   │
 │   └── F005_add_course/             # Add course tests
 │       ├── data/                    # Test data CSV
@@ -42,9 +52,17 @@ proj_3/
 │   │   ├── data/                    # CSV + locators.json
 │   │   └── test_level_2.py
 │   │
+│   ├── F002_assignment_submission/
+│   │   ├── data/                    # CSVs + locators.json + files/
+│   │   └── test_assignment_level2.py  # TC-002-001 to TC-002-011
+│   │
 │   ├── F003_forum_discussion/
 │   │   ├── data/                    # CSVs + locators.json
 │   │   └── test_*.py
+│   │
+│   ├── F004_glossary/
+│   │   ├── data/                    # CSV + locators.json
+│   │   └── test_glossary_level2.py  # TC-004-001 to TC-004-015
 │   │
 │   └── F005_add_course/
 │       ├── data/                    # CSV + locators.json
@@ -53,17 +71,27 @@ proj_3/
 ├── non_functional/                  # Non-functional tests
 │   ├── F001_quiz_attempt_review/
 │   │   ├── data/                    # accessibility + reliability configs
-│   │   ├── test_quiz_accessibility.py   # Keyboard usability & accessible names
-│   │   └── test_quiz_reliability.py     # Refresh/navigation recoverability
+│   │   ├── test_quiz_accessibility.py
+│   │   └── test_quiz_reliability.py
+│   │
+│   ├── F002_assignment_submission/
+│   │   ├── data/                    # authorization + performance configs + files/
+│   │   ├── test_submission_authorization.py  # Role-based access control
+│   │   └── test_submission_performance.py    # Response time measurement
 │   │
 │   ├── F003_forum_discussion/
 │   │   ├── data/                    # performance + responsive configs
-│   │   ├── test_forum_performance.py    # Response time measurement
-│   │   └── test_forum_responsive.py     # Viewport compatibility
+│   │   ├── test_forum_performance.py
+│   │   └── test_forum_responsive.py
+│   │
+│   ├── F004_glossary/
+│   │   ├── data/                    # performance + responsive configs
+│   │   ├── test_glossary_performance.py     # Response time measurement
+│   │   └── test_glossary_responsive.py      # Viewport compatibility
 │   │
 │   └── F005_add_course/
-│       ├── test_course_authorization.py   # Role-based access control
-│       └── test_course_creation_performance.py  # Response time
+│       ├── test_course_authorization.py
+│       └── test_course_creation_performance.py
 │
 ├── .gitignore
 ├── requirements.txt
@@ -79,42 +107,29 @@ All commands should be run **from the project root** (`proj_3/`).
 ### Run tests for a specific feature
 
 ```bash
-# F002 Assignment Submission (Level 1)
-python -m unittest discover -s level1/F002_assignment_submission -p "test_*.py" -v
-
-# F002 Assignment Submission (Level 2)
-python -m unittest discover -s level2/F002_assignment_submission -p "test_*.py" -v
-
-# F002 Assignment Submission (Single module)
-python -m unittest level1.F002_assignment_submission.test_add_submission_level1 -v
-# F001 Quiz Attempt and Result Review (Level 1)
+# F001 Quiz Attempt and Result Review
 python -m unittest discover -s level1/F001_quiz_attempt_review -p "test_*.py" -v
-
-# F001 Quiz Attempt and Result Review (Level 2)
 python -m unittest discover -s level2/F001_quiz_attempt_review -p "test_*.py" -v
-
-# F002 Assignment Submission (Non-functional)
-python -m unittest discover -s non_functional/F002_assignment_submission -p "test_*.py" -v
-
-# F003 Forum Discussion (Level 1)
-python -m unittest discover -s level1/F003_forum_discussion -p "test_*.py" -v
-
-# F005 Add Course (Level 1)
-python -m unittest discover -s level1/F005_add_course -p "test_*.py" -v
-
-# F003 Forum Discussion (Level 2)
-python -m unittest discover -s level2/F003_forum_discussion -p "test_*.py" -v
-
-# F005 Add Course (Level 2)
-python -m unittest discover -s level2/F005_add_course -p "test_*.py" -v
-
-# F001 Quiz Attempt and Result Review (Non-functional)
 python -m unittest discover -s non_functional/F001_quiz_attempt_review -p "test_*.py" -v
 
-# F003 Forum Discussion (Non-functional)
+# F002 Assignment Submission
+python -m unittest discover -s level1/F002_assignment_submission -p "test_*.py" -v
+python -m unittest discover -s level2/F002_assignment_submission -p "test_*.py" -v
+python -m unittest discover -s non_functional/F002_assignment_submission -p "test_*.py" -v
+
+# F003 Forum Discussion
+python -m unittest discover -s level1/F003_forum_discussion -p "test_*.py" -v
+python -m unittest discover -s level2/F003_forum_discussion -p "test_*.py" -v
 python -m unittest discover -s non_functional/F003_forum_discussion -p "test_*.py" -v
 
-# F005 Non-functional tests
+# F004 Glossary
+python -m unittest discover -s level1/F004_glossary -p "test_*.py" -v
+python -m unittest discover -s level2/F004_glossary -p "test_*.py" -v
+python -m unittest discover -s non_functional/F004_glossary -p "test_*.py" -v
+
+# F005 Add Course
+python -m unittest discover -s level1/F005_add_course -p "test_*.py" -v
+python -m unittest discover -s level2/F005_add_course -p "test_*.py" -v
 python -m unittest discover -s non_functional/F005_add_course -p "test_*.py" -v
 ```
 
@@ -128,21 +143,28 @@ python run_all.py
 
 ```bash
 python -m unittest level1.F001_quiz_attempt_review.test_level_1 -v
+python -m unittest level1.F002_assignment_submission.test_add_submission_level1 -v
+python -m unittest level1.F004_glossary.test_glossary_level1 -v
 python -m unittest level1.F005_add_course.test_add_course_level1 -v
+python -m unittest level2.F002_assignment_submission.test_assignment_level2 -v
+python -m unittest level2.F004_glossary.test_glossary_level2 -v
 ```
 
 ## Test Data Format
 
 - **F003/F005**: Test data stored as **tab-separated CSV** files in each feature's `data/` directory. Each file has a header row and one row per test case.
 - **F001**: Test data stored as **comma-separated CSV** files, read via Python's `csv.DictReader`.
-- **Non-functional configs**: Tab-separated CSV with scenario definitions and expected controls/results.
+- **F002**: Test data stored as **comma-separated CSV** files with Title Case headers (`Test ID`, `Assignment URL`, etc.). Level 2 uses its own CSVs (not shared with Level 1).
+- **F004**: Test data stored as **comma-separated CSV** files, read via `CSVReader.read_data(file, delimiter=",")`.
+- **Non-functional configs**: Tab-separated CSV with scenario definitions and expected controls/results. Exception: F004 functional data uses comma-separated.
 
 ## Credentials
 
-| Role    | Username  | Password   | Used by          |
-| ------- | --------- | ---------- | ---------------- |
-| Student | `student` | `moodle26` | F001, F003 tests |
-| Manager | `manager` | `moodle26` | F005 tests       |
+| Role    | Username   | Password   | Used by                          |
+| ------- | ---------- | ---------- | -------------------------------- |
+| Student | `student`  | `moodle26` | F001, F002 (TC-001..006,010,011), F003, F004 |
+| Teacher | `ericwebb` | `moodle`   | F002 (TC-007..009 grading)       |
+| Manager | `manager`  | `moodle26` | F005 tests                       |
 
 ## Adding a New Feature
 

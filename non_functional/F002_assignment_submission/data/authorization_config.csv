@@ -1,0 +1,2 @@
+test_case_id	scenario	assignment_url	role	username	password	forbidden_action	expected_result
+NF-F002-AUTH-001	Student cannot access grading interface	https://school.moodledemo.net/mod/assign/view.php?id=871	student	student	moodle26	&action=grading	Grading interface not accessible

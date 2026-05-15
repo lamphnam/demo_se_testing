@@ -1,12 +1,7 @@
 """
 test_assignment_level2.py - Level 2 Data-Driven Tests for Assignment Submission
 
-ZERO HARDCODED LOCATORS. All selectors from data/locators.json.
-
-CRITICAL FIXES:
-  1. The "Recent files" Trap: Explicitly clicks the "Upload a file" tab.
-  2. The Editor Engine Trap: Standard Selenium iframe switching for text entry.
-  3. The Missing Button Trap: Iterates through multiple Add Submission locators.
+Locators externalized to data/locators.json where practical.
 """
 
 import json
@@ -35,9 +30,9 @@ from selenium.webdriver.support import expected_conditions as EC
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 LOCATORS_FILE = os.path.join(DATA_DIR, "locators.json")
-ADD_DATA = os.path.join(DATA_DIR, "add_submission_level1.csv")
-REMOVE_DATA = os.path.join(DATA_DIR, "remove_submission_level1.csv")
-CUTOFF_DATA = os.path.join(DATA_DIR, "cutoff_submission_level1.csv")
+ADD_DATA = os.path.join(DATA_DIR, "add_submission_level2.csv")
+REMOVE_DATA = os.path.join(DATA_DIR, "remove_submission_level2.csv")
+CUTOFF_DATA = os.path.join(DATA_DIR, "cutoff_submission_level2.csv")
 
 
 class AssignmentLevel2(unittest.TestCase):
@@ -90,8 +85,6 @@ class AssignmentLevel2(unittest.TestCase):
         username, password = self._get_credentials(test_id)
 
         if self._current_user != username:
-            print(f"  [Auth] Logging in as: {username}")
-            # ABSOLUTE LOGOUT: Nuke cookies instead of clicking UI
             self.driver.delete_all_cookies()
             time.sleep(1)
 
@@ -146,63 +139,66 @@ class AssignmentLevel2(unittest.TestCase):
 
     def _navigate(self, url):
         self.driver.get(url)
-        time.sleep(2) # Allow redirect
-        
-        bypassed = False
-        # Bypass Moodle GDPR/Policy Interception Loop using Page Source
-        for _ in range(5):
-            page_text = self.driver.page_source.lower()
-            if "policy" in page_text and ("agree" in page_text or "consent" in page_text or "next" in page_text):
-                print("  [Auth] Moodle Policy Interception detected. Bypassing...")
-                bypassed = True
-                checkboxes = self.driver.find_elements(By.XPATH, "//input[@type='checkbox']")
-                for cb in checkboxes:
-                    if not cb.is_selected():
-                        self.driver.execute_script("arguments[0].click();", cb)
-                
-                next_btns = self.driver.find_elements(By.XPATH, "//button[@type='submit'] | //input[@type='submit']")
-                if next_btns:
-                    try:
-                        next_btns[0].click()
-                    except:
-                        self.driver.execute_script("arguments[0].click();", next_btns[0])
-                time.sleep(3)
-            else:
+        try:
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(self.get_by("page_element")))
+            if "policy" not in self.driver.current_url:
+                return
+        except TimeoutException:
+            pass
+
+        # Policy interception — handle Moodle's multi-page policy consent
+        for _ in range(10):
+            current_url = self.driver.current_url
+            if "policy" not in current_url.lower():
                 break
-                
-        if bypassed:
-            print("  [Auth] Policy bypassed. Returning to assignment...")
-            self.driver.get(url) # CRITICAL: Return to the actual assignment
-            time.sleep(2)
-            
+
+            next_links = self.driver.find_elements(By.XPATH, "//a[contains(text(), 'Next')]")
+            if next_links:
+                self.driver.execute_script("arguments[0].click();", next_links[0])
+                time.sleep(2)
+                continue
+
+            checkboxes = self.driver.find_elements(By.XPATH, "//input[@type='checkbox']")
+            for cb in checkboxes:
+                if not cb.is_selected():
+                    self.driver.execute_script("arguments[0].click();", cb)
+
+            submit_btns = self.driver.find_elements(By.XPATH,
+                "//button[@type='submit'] | //input[@type='submit'] | //a[contains(@class, 'btn-primary')]")
+            if submit_btns:
+                self.driver.execute_script("arguments[0].click();", submit_btns[0])
+                time.sleep(2)
+                continue
+
+            break
+
+        if "policy" in self.driver.current_url.lower() or url not in self.driver.current_url:
+            self.driver.get(url)
         self.wait.until(EC.presence_of_element_located(self.get_by("page_element")))
 
     # ---- Click Add / Edit submission ------------------------------------
 
     def _click_add_or_edit(self):
-        locators = [
-            (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'submission')]"),
-            (By.XPATH, "//a[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'submission')]"),
-            (By.XPATH, "//input[@type='submit' and contains(translate(@value, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'submission')]"),
-            (By.XPATH, "//*[@id='id_submitbutton']"),
-            (By.XPATH, "//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'attempt')]"),
-            (By.XPATH, "//button[@type='submit' and not(contains(translate(., 'CANCEL', 'cancel'), 'cancel'))]")
+        locator_keys = [
+            "add_submission_btn_1", "add_submission_btn_2",
+            "add_submission_btn_3", "add_submission_btn_4",
+            "add_submission_btn_5",
         ]
-        
-        for loc in locators:
+        for key in locator_keys:
             try:
-                btn = WebDriverWait(self.driver, 3).until(EC.element_to_be_clickable(loc))
+                btn = WebDriverWait(self.driver, 2).until(
+                    EC.element_to_be_clickable(self.get_by(key))
+                )
                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
-                time.sleep(1)
                 try:
-                    btn.click() # Standard click ensures form submission
-                except:
+                    btn.click()
+                except (StaleElementReferenceException, Exception):
                     self.driver.execute_script("arguments[0].click();", btn)
-                time.sleep(3) # CRITICAL: Wait for the Edit page to load
+                time.sleep(2)
                 return
             except (TimeoutException, StaleElementReferenceException):
                 continue
-                
+
         self.fail("'Add submission' / 'Edit submission' / 'Add new attempt' button not found.")
 
     # =====================================================================
@@ -211,110 +207,93 @@ class AssignmentLevel2(unittest.TestCase):
 
     def _upload_file_via_picker(self, file_path, expected_result="", username="student", test_id=""):
         driver = self.driver
-        wait = self.wait
 
         try:
-            add_btn = wait.until(EC.element_to_be_clickable(self.get_by("add_file_btn")))
-            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", add_btn)
+            add_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable(self.get_by("add_file_btn")))
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", add_btn)
+            driver.execute_script("arguments[0].click();", add_btn)
             time.sleep(1)
-            self.driver.execute_script("arguments[0].click();", add_btn)
-            time.sleep(2)
         except TimeoutException:
-            # CRITICAL FIX 1: Catch the intentional missing button for limit tests
             if "maximum" in expected_result.lower() or "file(s)" in expected_result.lower():
                 return expected_result
             return "Add button not found"
 
-        time.sleep(2) # Crucial: Wait for the modal animation to fully settle.
+        try:
+            WebDriverWait(driver, 5).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, ".filepicker, .file-picker, .moodle-dialogue-base"))
+            )
+        except TimeoutException:
+            pass
 
         local_upload_tcs = ["TC-002-001", "TC-002-003", "TC-002-004", "TC-002-005"]
 
         if username == "ericwebb" or test_id in local_upload_tcs:
-            # LOCAL UPLOAD APPROACH
             try:
-                upload_tab = wait.until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(), 'Upload a file')] | //a[contains(., 'Upload a file')]")))
-                self.driver.execute_script("arguments[0].click();", upload_tab)
-                time.sleep(2)
-                
-                file_input = wait.until(EC.presence_of_element_located((By.XPATH, "//input[@type='file']")))
-                self.driver.execute_script("arguments[0].style.display = 'block';", file_input)
+                upload_tab = WebDriverWait(driver, 5).until(EC.presence_of_element_located(self.get_by("upload_file_tab")))
+                driver.execute_script("arguments[0].click();", upload_tab)
+                time.sleep(1)
+
+                file_input = WebDriverWait(driver, 5).until(EC.presence_of_element_located(self.get_by("file_input")))
+                driver.execute_script("arguments[0].style.display = 'block';", file_input)
                 file_input.send_keys(file_path)
-                
-                upload_btn = wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'Upload this file')]")))
-                self.driver.execute_script("arguments[0].click();", upload_btn)
-                
-                # CRITICAL FIX 2: Dynamic wait for upload to finish (Modal mask disappears)
+
+                upload_btn = WebDriverWait(driver, 5).until(EC.presence_of_element_located(self.get_by("upload_this_file_btn")))
+                driver.execute_script("arguments[0].click();", upload_btn)
+
                 try:
-                    WebDriverWait(self.driver, 10).until(
-                        EC.invisibility_of_element_located((By.CSS_SELECTOR, ".yui3-widget-mask, .moodle-dialogue-base"))
+                    WebDriverWait(driver, 10).until(
+                        EC.invisibility_of_element_located(self.get_by("filepicker_mask"))
                     )
                 except TimeoutException:
-                    pass # Timeout implies an error dialog might have appeared and blocked closure
-            except Exception as e:
+                    pass
+            except (TimeoutException, NoSuchElementException) as e:
                 print(f"  [File Picker] Local upload error: {e}")
-                
+
         else:
-            # REPOSITORY SELECTION APPROACH (For 'student')
             target_filename = os.path.basename(file_path)
 
-            # Click the "Recent files" or "Server files" tab
-            repo_tab_xpath = "//span[contains(text(), 'Recent files')] | //span[contains(text(), 'Server files')] | //a[contains(., 'Recent files')]"
-            repo_tab = wait.until(EC.presence_of_element_located((By.XPATH, repo_tab_xpath)))
-            self.driver.execute_script("arguments[0].click();", repo_tab)
+            repo_tab = WebDriverWait(driver, 5).until(EC.presence_of_element_located(self.get_by("recent_files_tab")))
+            driver.execute_script("arguments[0].click();", repo_tab)
+            time.sleep(1)
 
-            time.sleep(2) # Crucial: Wait for the file list AJAX call to load.
-
-            # Click the target file (Compatible with both Grid and List views)
             file_xpath = f"//a[contains(., '{target_filename}')] | //div[contains(text(), '{target_filename}')] | //span[contains(text(), '{target_filename}')]"
-            for _ in range(3):
-                try:
-                    file_element = wait.until(EC.presence_of_element_located((By.XPATH, file_xpath)))
-                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", file_element)
-                    time.sleep(1)
-                    self.driver.execute_script("arguments[0].click();", file_element)
-                    break # Success
-                except TimeoutException:
-                    time.sleep(1)
-            time.sleep(2) # Wait for the confirm dialog
+            file_element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, file_xpath)))
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", file_element)
+            driver.execute_script("arguments[0].click();", file_element)
+            time.sleep(1)
 
-            # 3.5 Authentic Click on "Make a copy" Label
             try:
-                copy_label_xpath = "//label[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'copy')]"
-                copy_label = wait.until(EC.element_to_be_clickable((By.XPATH, copy_label_xpath)))
-                copy_label.click() # Standard click to trigger YUI events
-                time.sleep(1)
-            except Exception:
+                copy_label = WebDriverWait(driver, 3).until(EC.element_to_be_clickable(self.get_by("make_copy_label")))
+                copy_label.click()
+                time.sleep(0.5)
+            except (TimeoutException, NoSuchElementException):
                 pass
 
-            # Click the "Select this file" button in the sub-dialog
-            select_btn_xpath = "//button[contains(text(), 'Select this file')] | //button[contains(@class, 'fp-select-confirm')]"
-            select_btn = wait.until(EC.presence_of_element_located((By.XPATH, select_btn_xpath)))
-            self.driver.execute_script("arguments[0].click();", select_btn)
-            time.sleep(2) # Wait for the file to be attached and the picker to close
-            
-        # CRITICAL FIX 2: Check for VISIBLE error dialogues
+            select_btn = WebDriverWait(driver, 5).until(EC.presence_of_element_located(self.get_by("select_this_file_btn")))
+            driver.execute_script("arguments[0].click();", select_btn)
+            time.sleep(1)
+
         try:
-            error_dialogue = WebDriverWait(self.driver, 3).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, ".moodle-exception-message, .fp-error, .moodle-dialogue-exception"))
+            error_dialogue = WebDriverWait(driver, 3).until(
+                EC.visibility_of_element_located(self.get_by("error_dialogue"))
             )
             error_text = error_dialogue.text
             if error_text and error_text.strip():
                 return error_text.strip()
         except TimeoutException:
             pass
-            
-        time.sleep(2) # Final buffer before returning to click Save
+
+        time.sleep(1)
         return None
 
     def _wait_for_file_in_filemanager(self):
-        WebDriverWait(self.driver, 30).until(
+        WebDriverWait(self.driver, 15).until(
             EC.invisibility_of_element_located(self.get_by("filepicker_mask"))
         )
 
     def _check_for_modal_error(self):
-        short_wait = WebDriverWait(self.driver, 5)
         try:
-            error_el = short_wait.until(EC.visibility_of_element_located(
+            error_el = WebDriverWait(self.driver, 3).until(EC.visibility_of_element_located(
                 self.get_by("modal_error_area")
             ))
             return error_el.text
@@ -328,14 +307,13 @@ class AssignmentLevel2(unittest.TestCase):
         return None
 
     def _check_for_file_exists_dialog(self):
-        short_wait = WebDriverWait(self.driver, 5)
         try:
-            short_wait.until(EC.visibility_of_element_located(
+            WebDriverWait(self.driver, 3).until(EC.visibility_of_element_located(
                 self.get_by("file_exists_dialog")
             ))
             for name in ["overwrite_btn", "rename_btn", "fp_dlg_btn_fallback"]:
                 try:
-                    btn = short_wait.until(EC.presence_of_element_located(self.get_by(name)))
+                    btn = WebDriverWait(self.driver, 2).until(EC.presence_of_element_located(self.get_by(name)))
                     if btn.is_displayed():
                         self._js_click(btn)
                         return True
@@ -346,15 +324,14 @@ class AssignmentLevel2(unittest.TestCase):
         return False
 
     def _close_filepicker_modal(self):
-        short_wait = WebDriverWait(self.driver, 5)
-        try:
-            btn = short_wait.until(EC.presence_of_element_located(
-                self.get_by("filepicker_close_btn")
-            ))
-            if btn.is_displayed():
-                self._js_click(btn)
-        except (TimeoutException, StaleElementReferenceException):
-            pass
+        for name in ["filepicker_close_btn", "filepicker_close_btn_alt", "filepicker_cancel_btn"]:
+            try:
+                btn = WebDriverWait(self.driver, 2).until(EC.presence_of_element_located(self.get_by(name)))
+                if btn.is_displayed():
+                    self._js_click(btn)
+                    return
+            except (TimeoutException, StaleElementReferenceException):
+                continue
 
     # ---- Online text via Selenium Iframe switching ----------------------
 
@@ -363,35 +340,27 @@ class AssignmentLevel2(unittest.TestCase):
         wait = self.wait
 
         try:
-            # Locate the iframe robustly
             iframe = WebDriverWait(driver, 8).until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "iframe[id*='_ifr'], iframe.tox-edit-area__iframe, iframe[id^='tinymce']")
-                )
+                EC.presence_of_element_located(self.get_by("tinymce_iframe"))
             )
-            
-            # Switch to iframe, clear via JS, focus, send keys
             self.driver.switch_to.frame(iframe)
             body = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-            self.driver.execute_script("arguments[0].innerHTML = ''; arguments[0].focus();", body) # Safe clear and focus via JS
+            self.driver.execute_script("arguments[0].innerHTML = ''; arguments[0].focus();", body)
             time.sleep(0.5)
             body.send_keys(text)
-            
-            # Switch back to default content
             self.driver.switch_to.default_content()
             return
         except TimeoutException:
             driver.switch_to.default_content()
-            
-        # Fallback to Atto or basic textarea
+
         try:
             atto = WebDriverWait(driver, 5).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "div.editor_atto_content, div[contenteditable='true']"))
+                EC.presence_of_element_located(self.get_by("atto_editor"))
             )
             atto.clear()
             atto.send_keys(text)
         except TimeoutException:
-            ta = wait.until(EC.presence_of_element_located((By.XPATH, "//textarea[contains(@name, 'onlinetext')] | //textarea[contains(@id, 'id_onlinetext')]")))
+            ta = wait.until(EC.presence_of_element_located(self.get_by("text_textarea")))
             ta.clear()
             ta.send_keys(text)
 
@@ -399,40 +368,32 @@ class AssignmentLevel2(unittest.TestCase):
 
     def _save(self):
         self.driver.switch_to.default_content()
-        time.sleep(1)
-        
-        # CRITICAL: Click the main body to force Iframe blur/sync events
         try:
             self.driver.find_element(By.TAG_NAME, "body").click()
-        except:
+        except (NoSuchElementException, StaleElementReferenceException):
             pass
-        time.sleep(1)
-        
-        save_xpath = "//*[@id='id_submitbutton'] | //button[contains(., 'Save changes')] | //input[@value='Save changes']"
-        save_btn = self.wait.until(EC.presence_of_element_located((By.XPATH, save_xpath)))
+        time.sleep(0.5)
+
+        save_btn = self.wait.until(EC.presence_of_element_located(self.get_by("save_btn")))
         self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", save_btn)
-        time.sleep(1)
         try:
             save_btn.click()
-        except:
+        except (StaleElementReferenceException, Exception):
             self.driver.execute_script("arguments[0].click();", save_btn)
-        time.sleep(3) # Wait for Moodle to process the submission
+        time.sleep(2)
 
     def _cancel(self):
         self.driver.switch_to.default_content()
-        time.sleep(1)
-        
-        cancel_xpath = "//*[@id='id_cancel'] | //*[@name='cancel'] | //*[@name='cancelbutton'] | //a[contains(translate(., 'CANCEL', 'cancel'), 'cancel')] | //button[contains(translate(., 'CANCEL', 'cancel'), 'cancel')] | //input[contains(translate(@value, 'CANCEL', 'cancel'), 'cancel')]"
-        
+        time.sleep(0.5)
+
         try:
-            cancel_btn = self.wait.until(EC.presence_of_element_located((By.XPATH, cancel_xpath)))
+            cancel_btn = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located(self.get_by("cancel_btn")))
             self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", cancel_btn)
-            time.sleep(1)
             try:
                 cancel_btn.click()
-            except:
+            except (StaleElementReferenceException, Exception):
                 self.driver.execute_script("arguments[0].click();", cancel_btn)
-            time.sleep(3)
+            time.sleep(2)
         except TimeoutException:
             self.fail("'Cancel' button not found.")
 
@@ -492,6 +453,8 @@ class AssignmentLevel2(unittest.TestCase):
             test_name = row["Test Case Name"].strip()
             url = row["Assignment URL"].strip()
             file_path = row.get("File Path", "").strip()
+            if file_path and not os.path.isabs(file_path):
+                file_path = os.path.join(BASE_DIR, file_path)
             text_content = row.get("Text Content", "").strip()
             expected = row["Expected Result"].strip()
 
@@ -522,7 +485,13 @@ class AssignmentLevel2(unittest.TestCase):
 
                 # --- ALL FILE UPLOAD CASES ---
                 self._click_add_or_edit()
-                
+
+                # TC-002-005 precondition: max-files test requires a file already
+                # present in the filemanager. Upload one first, then attempt another.
+                if test_id == "TC-002-005":
+                    self._upload_file_via_picker(file_path, "", self._current_user, test_id)
+                    time.sleep(2)
+
                 modal_error = self._upload_file_via_picker(file_path, expected, self._current_user, test_id)
                 
                 if modal_error:
@@ -544,7 +513,8 @@ class AssignmentLevel2(unittest.TestCase):
                 if "maximum" in expected.lower() or "source key" in expected.lower() or "already been attached" in expected.lower():
                     if normalized_expected in normalized_page or expected.lower() in page_text:
                         print(f"  [Main Page Error Caught] {expected}")
-                        self.assertTrue(True, "Main page error text confirmed.") # DO NOT CALL _verify()
+                        self.assertIn(normalized_expected, normalized_page,
+                                      f"{test_id}: Expected error text not found on page.")
                         self._navigate(url)
                         print(f"PASSED {test_id}")
                         continue
@@ -552,16 +522,20 @@ class AssignmentLevel2(unittest.TestCase):
                 # TC-004 / TC-005: modal error (oversize / max files).
                 if test_id in ("TC-002-004", "TC-002-005"):
                     error_text = self._check_for_modal_error()
-                    
+
                     if modal_error or error_text:
                         print(f"    [Limit Reached] Moodle successfully blocked the file.")
-                        self.assertTrue(True)
+                        error_msg = modal_error or error_text
+                        self.assertTrue(
+                            expected.lower() in error_msg.lower() or expected.lower() in self.driver.page_source.lower(),
+                            f"{test_id}: Expected limit error '{expected}' not found in modal or page."
+                        )
                     else:
                         self.fail(f"Test {test_id} expected to be blocked but no error was caught.")
-                        
+
                     try:
                         self._close_filepicker_modal()
-                    except:
+                    except (TimeoutException, StaleElementReferenceException):
                         pass
                     self._navigate(url)
                     print(f"PASSED {test_id}")

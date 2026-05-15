@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(python:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(mkdir -p level1/F002_assignment_submission/data/files)",
+      "Bash(mkdir -p level2/F002_assignment_submission/data/files)",
+      "Bash(cp test_doc.doc level1/F002_assignment_submission/data/files/)",
+      "Bash(cp 1mb.pdf level1/F002_assignment_submission/data/files/)",
+      "Bash(cp test_doc.doc level2/F002_assignment_submission/data/files/)"
     ]
   }
 }

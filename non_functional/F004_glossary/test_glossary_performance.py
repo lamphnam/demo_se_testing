@@ -39,15 +39,13 @@ class GlossaryPerformanceTest(unittest.TestCase):
         LoginHelper.ensure_logged_in(self.driver, return_url=return_url, username="student", password="moodle26")
 
     def read_test_data(self):
-        return CSVReader.read_data(DATA_FILE, delimiter=",")
+        return CSVReader.read_data(DATA_FILE, delimiter="\t")
 
-    def scenario_page_load(self):
+    def scenario_page_load(self, url):
         """Measure time to load the glossary page."""
         driver = self.driver
         wait = self.wait
 
-        url = "https://school.moodledemo.net/mod/glossary/view.php?id=570&mode=letter&hook=ALL"
-        
         start = time.time()
         driver.get(url)
         self.ensure_logged_in(return_url=url)
@@ -55,12 +53,11 @@ class GlossaryPerformanceTest(unittest.TestCase):
         elapsed = time.time() - start
         return elapsed
 
-    def scenario_add_form_load(self):
+    def scenario_add_form_load(self, url):
         """Measure time to click add entry and form completely loaded."""
         driver = self.driver
         wait = self.wait
 
-        url = "https://school.moodledemo.net/mod/glossary/view.php?id=570&mode=letter&hook=ALL"
         driver.get(url)
         self.ensure_logged_in(return_url=url)
 
@@ -77,12 +74,11 @@ class GlossaryPerformanceTest(unittest.TestCase):
         elapsed = time.time() - start
         return elapsed
 
-    def scenario_search_action(self):
+    def scenario_search_action(self, url):
         """Measure time to perform a search action."""
         driver = self.driver
         wait = self.wait
 
-        url = "https://school.moodledemo.net/mod/glossary/view.php?id=570&mode=letter&hook=ALL"
         driver.get(url)
         self.ensure_logged_in(return_url=url)
 
@@ -103,17 +99,18 @@ class GlossaryPerformanceTest(unittest.TestCase):
             test_case_id = row["test_case_id"]
             action = row["action"]
             threshold = float(row["threshold_seconds"])
+            url = row["glossary_url"]
 
             print(f"\nRunning {test_case_id} - action: {action} (threshold: {threshold}s)")
 
             with self.subTest(test_case_id=test_case_id):
                 elapsed = -1
                 if action == "page_load":
-                    elapsed = self.scenario_page_load()
+                    elapsed = self.scenario_page_load(url)
                 elif action == "add_form_load":
-                    elapsed = self.scenario_add_form_load()
+                    elapsed = self.scenario_add_form_load(url)
                 elif action == "search_action":
-                    elapsed = self.scenario_search_action()
+                    elapsed = self.scenario_search_action(url)
                 else:
                     self.fail(f"Unknown action: {action}")
 

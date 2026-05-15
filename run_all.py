@@ -13,13 +13,19 @@ def main():
     # Discover tests from all test directories
     test_dirs = [
         "level1/F001_quiz_attempt_review",
+        "level1/F002_assignment_submission",
         "level1/F003_forum_discussion",
+        "level1/F004_glossary",
         "level1/F005_add_course",
         "level2/F001_quiz_attempt_review",
+        "level2/F002_assignment_submission",
         "level2/F003_forum_discussion",
+        "level2/F004_glossary",
         "level2/F005_add_course",
         "non_functional/F001_quiz_attempt_review",
+        "non_functional/F002_assignment_submission",
         "non_functional/F003_forum_discussion",
+        "non_functional/F004_glossary",
         "non_functional/F005_add_course",
     ]
 
